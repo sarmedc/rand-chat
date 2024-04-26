@@ -1,12 +1,21 @@
 import connectMongoDB from "@/libs/mongodb";
 import ChatRoom from "@/models/chatRoom";
 import { NextResponse } from "next/server";
+import { v4 as uuidv4 } from "uuid";
 
 export async function POST(request) {
-  const { user } = await request.json();
+  const { id } = await request.json();
   await connectMongoDB();
-  await ChatRoom.create({ users: [user], messages: [] });
-  return NextResponse.json({ message: "Chat Room Created" }, { status: 201 });
+  const newRoomId = await uuidv4().toString();
+  await ChatRoom.create({
+    id: newRoomId,
+    users: [id],
+    messages: { [id]: [] },
+  });
+  return NextResponse.json(
+    { message: "Chat Room Created", id: newRoomId },
+    { status: 201 }
+  );
 }
 
 export async function GET() {

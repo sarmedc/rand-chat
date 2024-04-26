@@ -1,8 +1,12 @@
 import mongoose, { Schema } from "mongoose";
 
 const chatRoomSchema = new Schema({
+  id: String,
   users: [String],
-  messages: [{ user: String, message: String, timestamp: Date }],
+  messages: {
+    type: mongoose.Schema.Types.Mixed, // Or mongoose.Schema.Types.Object
+    default: {}, // Initialize as an empty object
+  },
 });
 
 const ChatRoom =

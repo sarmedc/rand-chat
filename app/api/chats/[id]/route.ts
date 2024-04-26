@@ -13,6 +13,7 @@ export async function PUT(request, { params }) {
 
 export async function GET(request, { params }) {
   const { id } = params;
+  console.log("skrt ", id, params);
   await connectMongoDB();
   const chatRoom = await ChatRoom.findOne({ _id: id });
   return NextResponse.json({ chatRoom }, { status: 200 });

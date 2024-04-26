@@ -1,11 +1,11 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@api/auth/[...nextauth]/route";
-import { v4 as uuidv4 } from "uuid";
 import { redirect } from "next/navigation";
+import StartChatButton from "@components/StartChatButton";
 
 const getUser = async (id) => {
   try {
-    const res = await fetch(`http://localhost:3000/api/users?id=${id}`, {
+    const res = await fetch(`http://localhost:3000/api/users/${id}`, {
       //cache: "no-store",
     });
 
@@ -13,7 +13,7 @@ const getUser = async (id) => {
       throw new Error("Failed to fetch user");
     }
 
-    return res.json() || { users: [] };
+    return res.json();
   } catch (error) {
     console.log("Error loading user: ", error);
   }
@@ -29,8 +29,8 @@ const addUser = async (user) => {
       body: JSON.stringify({
         name: user.name,
         email: user.email,
-        id: user.id,
         role: user.role,
+        id: user.id,
       }),
     });
 
@@ -49,27 +49,18 @@ const Home = async () => {
   if (!session) {
     redirect("/signin?callbackUrl=/");
   }
-  const userRes = await getUser(session.user.id);
-  console.log(userRes);
-  const { users } = userRes;
-  console.log("SESSION: ", session, "users:", users);
-  if (users.length === 0 && session.user) {
+
+  const { user } = await getUser(session.user.id);
+  // const chatRes = await getChats();
+
+  if (session.user && !user) {
     await addUser(session.user);
   }
 
-  // const handleCreateChat = () => {
-  //   const chat = {
-  //     id: uuidv4(),
-  //     topic: "test",
-  //     users: ['1'],
-  //     messages: [],
-  //   };
-  //   setChats((chats) => [...chats, chat]);
-  // };
   return (
     <div>
       <h1>Rand Chat</h1>
-      <button>Start a random chat</button>
+      <StartChatButton />
     </div>
   );
 };
