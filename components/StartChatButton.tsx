@@ -1,11 +1,8 @@
 "use client";
-import { useEffect } from "react";
-import io from "socket.io-client";
-import { useSession } from "next-auth/react";
 import { socket } from "../socket";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 
-const createNewRoom = async (user) => {
+const createNewRoom = async (id) => {
   try {
     const res = await fetch(`http://localhost:3000/api/chats`, {
       method: "POST",
@@ -13,7 +10,7 @@ const createNewRoom = async (user) => {
         "Content-type": "application/json",
       },
       body: JSON.stringify({
-        id: user.id,
+        id,
       }),
     });
 
@@ -23,7 +20,31 @@ const createNewRoom = async (user) => {
 
     return res.json();
   } catch (error) {
-    console.log("Error creating chat room: ", error);
+    console.error("Error creating chat room: ", error);
+  }
+};
+
+const updateRoom = async (userId, roomId) => {
+  try {
+    const res = await fetch(`http://localhost:3000/api/chats/${roomId}`, {
+      method: "PUT",
+      headers: {
+        "Content-type": "application/json",
+      },
+      body: JSON.stringify({
+        newUser: userId,
+        newMessage: [],
+        isNewUser: true,
+      }),
+    });
+
+    if (!res.ok) {
+      throw new Error("Failed to update chat room");
+    }
+
+    return res.json();
+  } catch (error) {
+    console.error("Error updating chat room: ", error);
   }
 };
 
@@ -37,41 +58,36 @@ const findAvailableChat = async () => {
 
     return res.json();
   } catch (error) {
-    console.log("Error finding chat rooms: ", error);
+    console.error("Error finding chat rooms: ", error);
   }
 };
 
-const findAvailableRoom = (rooms) => {
-  return rooms.find((room) => room.users.length < 2);
+const findAvailableRoom = (rooms, id) => {
+  return rooms.find(
+    (room) => room.users.length < 2 && !room.users.includes(id)
+  );
 };
 
-const StartChatButton = () => {
-  const { data: session, status } = useSession();
-
-  if (status === "loading") {
-    return <p>Loading...</p>;
-  }
+const StartChatButton = ({ session, userId }) => {
+  const router = useRouter();
 
   const handleCreateChat = async () => {
     const { chatRooms } = await findAvailableChat();
-    const availableRoom = await findAvailableRoom(chatRooms);
-
+    const availableRoom = await findAvailableRoom(chatRooms, userId);
     let newRoom;
-    if (availableRoom && session?.user?.id !== availableRoom.id)
-      newRoom = availableRoom.id;
-    else newRoom = await createNewRoom(session?.user);
-    socket.emit("createChat", newRoom);
+
+    if (availableRoom) newRoom = await updateRoom(userId, availableRoom?._id);
+    else newRoom = await createNewRoom(userId);
+    socket.emit("joinRoom", newRoom?.id);
   };
 
-  useEffect(() => {
-    const socket = io("http://localhost:3000"); // Replace with your server URL
+  socket.on("newChatRoom", (room) => {
+    console.log("Received new room:", room);
+    router.push(`/chat/${room}`);
+  });
 
-    socket.on("newChatRoom", (room) => {
-      console.log("Received new room:", room);
-    });
-
-    return () => socket.disconnect();
-  }, []);
+  // useEffect(() => {
+  // }, []);
 
   return (
     <>

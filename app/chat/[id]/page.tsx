@@ -1,13 +1,11 @@
-import { useParams } from "next/navigation";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@api/auth/[...nextauth]/route";
+import ChatMessages from "@/components/ChatMessages";
 
 const Chat = async () => {
-  const { tag, item } = useParams<{ tag: string; item: string }>();
+  const session = await getServerSession(authOptions);
 
-  return (
-    <div>
-      <h1>Room: ${item}</h1>
-    </div>
-  );
+  return <div>{session && <ChatMessages session={session} />}</div>;
 };
 
 export default Chat;

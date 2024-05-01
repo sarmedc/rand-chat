@@ -3,17 +3,19 @@ import Users from "@/models/users";
 import { NextResponse } from "next/server";
 
 export async function POST(request) {
-  const { name, email, role, id } = await request.json();
+  const { name, email, role } = await request.json();
   await connectMongoDB();
-  await Users.create({ name, email, role, id });
+  await Users.create({ name, email, role });
   return NextResponse.json({ message: "User Created" }, { status: 201 });
 }
 
-export async function GET() {
-  await connectMongoDB();
-  const users = await Users.find();
-  return NextResponse.json({ users });
-}
+// export async function GET(request) {
+//   const { email } = await request.json();
+//   await connectMongoDB();
+//   const user = (await Users.findOne({ email }));
+//   console.log("api: ", user);
+//   return NextResponse.json({ user });
+// }
 
 // export async function PUT(request) {
 //   const id = request.nextUrl.searchParams.get("id");

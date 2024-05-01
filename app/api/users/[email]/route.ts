@@ -3,8 +3,8 @@ import User from "@/models/users";
 import { NextResponse } from "next/server";
 
 export async function GET(request, { params }) {
-  const { id } = params;
+  const { email } = params;
   await connectMongoDB();
-  const user = await User.findOne({ id });
+  const user = await User.findOne({ email });
   return NextResponse.json({ user }, { status: 200 });
 }

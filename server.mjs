@@ -15,9 +15,14 @@ app.prepare().then(() => {
   const io = new Server(httpServer);
 
   io.on("connection", (socket) => {
-    socket.on("createChat", (room) => {
+    socket.on("joinRoom", (room) => {
       console.log("room: ", room);
-      io.emit("chat room", room);
+      socket.join(room);
+      socket.emit("newChatRoom", room);
+    });
+    socket.on("sendMessage", (roomId, message) => {
+      console.log("id: ", roomId, "message: ", message);
+      socket.to(roomId).emit("newMessage", roomId, message);
     });
   });
 

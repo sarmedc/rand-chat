@@ -4,16 +4,29 @@ import { NextResponse } from "next/server";
 
 export async function PUT(request, { params }) {
   const { id } = params;
-  const { newUser: user, newMessage: message } = await request.json();
+  const {
+    newUser: userId,
+    newMessage: message,
+    isNewUser,
+  } = await request.json();
   await connectMongoDB();
-  if (user) await ChatRoom.findByIdAndUpdate(id, { $push: { users: user } });
-  else await ChatRoom.findByIdAndUpdate(id, { $push: { messages: message } });
-  return NextResponse.json({ message: "Chat Room updated" }, { status: 200 });
+  if (isNewUser)
+    await ChatRoom.findByIdAndUpdate(id, {
+      $push: { users: userId },
+      ["messages." + userId]: [],
+    });
+  else
+    await ChatRoom.findByIdAndUpdate(id, {
+      $push: { ["messages." + userId]: message },
+    });
+  return NextResponse.json(
+    { message: "Chat Room updated", id },
+    { status: 200 }
+  );
 }
 
 export async function GET(request, { params }) {
   const { id } = params;
-  console.log("skrt ", id, params);
   await connectMongoDB();
   const chatRoom = await ChatRoom.findOne({ _id: id });
   return NextResponse.json({ chatRoom }, { status: 200 });
