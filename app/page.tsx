@@ -3,58 +3,8 @@ import { authOptions } from "@api/auth/[...nextauth]/route";
 import { redirect } from "next/navigation";
 import StartChatButton from "@components/StartChatButton";
 import ChatList from "@/components/ChatList";
-
-const getUser = async (email) => {
-  try {
-    const res = await fetch(`http://localhost:3000/api/users/${email}`, {});
-
-    if (!res.ok) {
-      throw new Error("Failed to fetch user");
-    }
-
-    return res.json();
-  } catch (error) {
-    console.error("Error loading user: ", error);
-  }
-};
-
-const getChats = async (id) => {
-  try {
-    const res = await fetch(`http://localhost:3000/api/chats?id=${id}`, {});
-
-    if (!res.ok) {
-      throw new Error("Failed to fetch chats");
-    }
-
-    return res.json();
-  } catch (error) {
-    console.error("Error loading chats: ", error);
-  }
-};
-
-const addUser = async (user) => {
-  try {
-    const res = await fetch(`http://localhost:3000/api/users`, {
-      method: "POST",
-      headers: {
-        "Content-type": "application/json",
-      },
-      body: JSON.stringify({
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      }),
-    });
-
-    if (!res.ok) {
-      throw new Error("Failed to add user");
-    }
-
-    return res.json();
-  } catch (error) {
-    console.error("Error adding user: ", error);
-  }
-};
+import { getUser, addUser } from "@/components/api/user";
+import { getChatMessages } from "@/components/api/chat";
 
 const Home = async () => {
   const session = await getServerSession(authOptions);
@@ -63,7 +13,7 @@ const Home = async () => {
   }
 
   const { user } = await getUser(session.user.email);
-  const { chatRooms } = await getChats(user._id);
+  const { chatRooms } = await getChatMessages(user._id, true);
 
   if (session.user && !user) {
     await addUser(session.user);

@@ -2,50 +2,31 @@
 import { useParams, redirect } from "next/navigation";
 import { useEffect, useState } from "react";
 import { socket } from "../socket";
-
-const getChatMessages = async (id) => {
-  try {
-    const res = await fetch(`http://localhost:3000/api/chats/${id}`, {});
-
-    if (!res.ok) {
-      throw new Error("Failed to fetch user");
-    }
-
-    return res.json();
-  } catch (error) {
-    console.error("Error loading user: ", error);
-  }
-};
-
-const updateMessages = async (roomId, newMessage, newUser) => {
-  try {
-    const res = await fetch(`http://localhost:3000/api/chats/${roomId}`, {
-      method: "PUT",
-      headers: {
-        "Content-type": "application/json",
-      },
-      body: JSON.stringify({
-        newUser,
-        newMessage,
-        isNewUser: false,
-      }),
-    });
-
-    if (!res.ok) {
-      throw new Error("Failed to update chat room");
-    }
-
-    return res.json();
-  } catch (error) {
-    console.error("Error updating chat room: ", error);
-  }
-};
+import { getChatMessages, updateMessages } from "@components/api/chat";
 
 const constructMessages = (a, b) => {
-  return [];
+  let i = 0,
+    j = 0;
+  let res = [];
+
+  while (i < a.length && j < b.length) {
+    let tsA = new Date(a[i].timestamp),
+      tsB = new Date(b[j].timestamp);
+    res.push(tsA <= tsB ? a[i++] : b[j++]);
+  }
+
+  while (i < a.length) {
+    res.push(a[i++]);
+  }
+
+  while (j < b.length) {
+    res.push(b[j++]);
+  }
+
+  return res;
 };
 
-const ChatMessages = ({ session }) => {
+const ChatMessages = ({ session, userId }) => {
   const { id } = useParams();
   if (!session) {
     redirect(`/signin?callbackUrl=/chat/${id}`);
@@ -54,36 +35,48 @@ const ChatMessages = ({ session }) => {
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
-    getMessages(id);
+    socket.emit("joinRoom", id);
+  }, [id]);
 
-    async function getMessages(id) {
+  useEffect(() => {
+    getMessages(userId);
+
+    async function getMessages(userId) {
       const {
-        chatRoom: { messages },
-      } = await getChatMessages(id);
+        chatRooms: { messages },
+      } = await getChatMessages(userId);
+      console.log(messages);
       const users = Object.keys(messages);
       const userMsgA = messages[users[0]];
       const userMsgB = messages[users[1]];
 
       setMessages(constructMessages(userMsgA, userMsgB));
     }
-  }, [id]);
+  }, [userId]);
 
-  const handleNewMessage = async (roomId, msg) => {
-    await updateMessages(roomId, msg);
+  const handleNewMessage = async (roomId, msg, userId) => {
+    console.log("handle new message");
+    await updateMessages(roomId, msg, userId);
     setMessages([...messages, msg]);
   };
 
   const handleSubmit = (e) => {
     if (e.keyCode === 13) {
-      socket.emit("sendMessage", id.toString(), {
-        message: e.target.value,
-        timestamp: new Date().toISOString(),
-      });
+      socket.emit(
+        "sendMessage",
+        id.toString(),
+        {
+          message: e.target.value,
+          timestamp: new Date().toISOString(),
+        },
+        userId.toString()
+      );
     }
   };
 
-  socket.on("newMessage", (roomId, msg) => {
-    if (roomId === id) handleNewMessage(roomId, msg);
+  socket.on("newMessage", (roomId, msg, userId) => {
+    console.log(roomId, id);
+    if (roomId === id) handleNewMessage(roomId, msg, userId);
   });
 
   return (

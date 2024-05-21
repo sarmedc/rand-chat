@@ -13,16 +13,34 @@ app.prepare().then(() => {
   const httpServer = createServer(handler);
 
   const io = new Server(httpServer);
+  const rooms = {};
+  let socketId;
+
+  const roomSetup = (socket, socketId, room, emitName) => {
+    if (!rooms[room]) {
+      rooms[room] = [];
+    }
+    if (!rooms[room].includes(socketId)) {
+      rooms[room].push(socketId);
+      socket.join(room);
+      socket.emit(emitName, room);
+    } else socket.emit("alreadyJoinedRoom");
+  };
 
   io.on("connection", (socket) => {
+    socketId = socket.id;
+
+    socket.on("joinNewRoom", (room) => {
+      console.log("room: ", room);
+      roomSetup(socket, socketId, room, "newChatRoom");
+    });
     socket.on("joinRoom", (room) => {
       console.log("room: ", room);
-      socket.join(room);
-      socket.emit("newChatRoom", room);
+      roomSetup(socket, socketId, room, "chatRoom");
     });
-    socket.on("sendMessage", (roomId, message) => {
-      console.log("id: ", roomId, "message: ", message);
-      socket.to(roomId).emit("newMessage", roomId, message);
+    socket.on("sendMessage", (roomId, message, userId) => {
+      console.log("id: ", roomId, "message: ", message, "userId: ", userId);
+      socket.to(roomId).emit("newMessage", roomId, message, userId);
     });
   });
 

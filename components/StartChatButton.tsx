@@ -1,66 +1,11 @@
 "use client";
 import { socket } from "../socket";
 import { useRouter } from "next/navigation";
-
-const createNewRoom = async (id) => {
-  try {
-    const res = await fetch(`http://localhost:3000/api/chats`, {
-      method: "POST",
-      headers: {
-        "Content-type": "application/json",
-      },
-      body: JSON.stringify({
-        id,
-      }),
-    });
-
-    if (!res.ok) {
-      throw new Error("Failed to create chat room");
-    }
-
-    return res.json();
-  } catch (error) {
-    console.error("Error creating chat room: ", error);
-  }
-};
-
-const updateRoom = async (userId, roomId) => {
-  try {
-    const res = await fetch(`http://localhost:3000/api/chats/${roomId}`, {
-      method: "PUT",
-      headers: {
-        "Content-type": "application/json",
-      },
-      body: JSON.stringify({
-        newUser: userId,
-        newMessage: [],
-        isNewUser: true,
-      }),
-    });
-
-    if (!res.ok) {
-      throw new Error("Failed to update chat room");
-    }
-
-    return res.json();
-  } catch (error) {
-    console.error("Error updating chat room: ", error);
-  }
-};
-
-const findAvailableChat = async () => {
-  try {
-    const res = await fetch(`http://localhost:3000/api/chats`);
-
-    if (!res.ok) {
-      throw new Error("Failed to find chat rooms");
-    }
-
-    return res.json();
-  } catch (error) {
-    console.error("Error finding chat rooms: ", error);
-  }
-};
+import {
+  createNewRoom,
+  updateRoom,
+  findAvailableChat,
+} from "@/components/api/chat";
 
 const findAvailableRoom = (rooms, id) => {
   return rooms.find(
@@ -78,7 +23,7 @@ const StartChatButton = ({ session, userId }) => {
 
     if (availableRoom) newRoom = await updateRoom(userId, availableRoom?._id);
     else newRoom = await createNewRoom(userId);
-    socket.emit("joinRoom", newRoom?.id);
+    socket.emit("joinNewRoom", newRoom?.id);
   };
 
   socket.on("newChatRoom", (room) => {

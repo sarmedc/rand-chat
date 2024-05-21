@@ -10,15 +10,18 @@ export async function PUT(request, { params }) {
     isNewUser,
   } = await request.json();
   await connectMongoDB();
+  console.log(id, userId, message, isNewUser);
   if (isNewUser)
     await ChatRoom.findByIdAndUpdate(id, {
       $push: { users: userId },
       ["messages." + userId]: [],
     });
-  else
+  else {
+    console.log("pushing p");
     await ChatRoom.findByIdAndUpdate(id, {
       $push: { ["messages." + userId]: message },
     });
+  }
   return NextResponse.json(
     { message: "Chat Room updated", id },
     { status: 200 }
