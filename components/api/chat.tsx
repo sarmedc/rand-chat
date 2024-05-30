@@ -43,7 +43,6 @@ export const updateRoom = async (userId, roomId) => {
 };
 
 export const updateMessages = async (roomId, newMessage, newUser) => {
-  console.log("update messages");
   return api(
     `http://localhost:3000/api/chats/${roomId}`,
     {

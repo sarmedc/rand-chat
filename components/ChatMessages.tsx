@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { socket } from "../socket";
 import { getChatMessages, updateMessages } from "@components/api/chat";
 
-const constructMessages = (a, b) => {
+const constructMessages = (a = [], b = []) => {
   let i = 0,
     j = 0;
   let res = [];
@@ -36,6 +36,10 @@ const ChatMessages = ({ session, userId }) => {
 
   useEffect(() => {
     socket.emit("joinRoom", id);
+
+    return () => {
+      socket.emit("leaveRoom", id);
+    };
   }, [id]);
 
   useEffect(() => {
@@ -45,7 +49,7 @@ const ChatMessages = ({ session, userId }) => {
       const {
         chatRooms: { messages },
       } = await getChatMessages(userId);
-      console.log(messages);
+
       const users = Object.keys(messages);
       const userMsgA = messages[users[0]];
       const userMsgB = messages[users[1]];
@@ -54,9 +58,8 @@ const ChatMessages = ({ session, userId }) => {
     }
   }, [userId]);
 
-  const handleNewMessage = async (roomId, msg, userId) => {
-    console.log("handle new message");
-    await updateMessages(roomId, msg, userId);
+  const handleNewMessage = (roomId, msg, userId) => {
+    //await updateMessages(roomId, msg, userId);
     setMessages([...messages, msg]);
   };
 
@@ -75,7 +78,6 @@ const ChatMessages = ({ session, userId }) => {
   };
 
   socket.on("newMessage", (roomId, msg, userId) => {
-    console.log(roomId, id);
     if (roomId === id) handleNewMessage(roomId, msg, userId);
   });
 

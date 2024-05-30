@@ -23,11 +23,11 @@ const StartChatButton = ({ session, userId }) => {
 
     if (availableRoom) newRoom = await updateRoom(userId, availableRoom?._id);
     else newRoom = await createNewRoom(userId);
+
     socket.emit("joinNewRoom", newRoom?.id);
   };
 
   socket.on("newChatRoom", (room) => {
-    console.log("Received new room:", room);
     router.push(`/chat/${room}`);
   });
 
