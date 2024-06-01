@@ -1,15 +1,15 @@
 import { api } from "./helper";
 
-export const getChatMessages = async (id, isMulti = false) => {
-  return api(
-    `http://localhost:3000/api/chats?id=${id}&isMulti=${isMulti}`,
+export const getChatMessages = async ({ id, isMulti, chatId }) => {
+  return await api(
+    `http://localhost:3000/api/chats?id=${id}&chatId=${chatId}&isMulti=${isMulti}`,
     {},
     "Failed to fetch chats"
   );
 };
 
 export const createNewRoom = async (id) => {
-  return api(
+  return await api(
     `http://localhost:3000/api/chats`,
     {
       method: "POST",
@@ -25,7 +25,7 @@ export const createNewRoom = async (id) => {
 };
 
 export const updateRoom = async (userId, roomId) => {
-  return api(
+  return await api(
     `http://localhost:3000/api/chats/${roomId}`,
     {
       method: "PUT",
@@ -43,7 +43,7 @@ export const updateRoom = async (userId, roomId) => {
 };
 
 export const updateMessages = async (roomId, newMessage, newUser) => {
-  return api(
+  return await api(
     `http://localhost:3000/api/chats/${roomId}`,
     {
       method: "PUT",
@@ -61,7 +61,7 @@ export const updateMessages = async (roomId, newMessage, newUser) => {
 };
 
 export const findAvailableChat = async () => {
-  return api(
+  return await api(
     `http://localhost:3000/api/chats`,
     {},
     "Failed to find chat rooms"

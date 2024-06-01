@@ -20,13 +20,15 @@ export async function POST(request) {
 
 export async function GET(request, { params }) {
   const id = request.nextUrl.searchParams.get("id");
+  const chatId = request.nextUrl.searchParams.get("chatId");
   const isMulti = JSON.parse(request.nextUrl.searchParams.get("isMulti"));
   await connectMongoDB();
   let chatRooms;
   if (id) {
-    const filter = {
+    let filter = {
       ["messages." + id]: { $exists: true },
     };
+    if (chatId !== "undefined") filter = { ...filter, _id: chatId.toString() };
     if (isMulti) chatRooms = await ChatRoom.find(filter);
     else chatRooms = await ChatRoom.findOne(filter);
   } else chatRooms = await ChatRoom.find();

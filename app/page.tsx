@@ -13,7 +13,7 @@ const Home = async () => {
   }
 
   const { user } = await getUser(session.user.email);
-  const { chatRooms } = await getChatMessages(user._id, true);
+  const { chatRooms } = await getChatMessages({ id: user._id, isMulti: true });
 
   if (session.user && !user) {
     await addUser(session.user);

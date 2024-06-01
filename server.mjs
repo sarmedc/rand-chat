@@ -35,7 +35,7 @@ app.prepare().then(() => {
     });
     socket.on("sendMessage", (roomId, message, userId) => {
       console.log("id: ", roomId, "message: ", message, "userId: ", userId);
-      socket.to(roomId).emit("newMessage", roomId, message, userId);
+      io.in(roomId).emit("newMessage", roomId, message, userId);
     });
   });
 

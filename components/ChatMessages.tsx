@@ -35,20 +35,27 @@ const ChatMessages = ({ session, userId }) => {
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
+    const newMessage = (roomId, msg, userId) => {
+      handleNewMessage(roomId, msg, userId);
+    };
+
     socket.emit("joinRoom", id);
+
+    socket.on("newMessage", newMessage);
 
     return () => {
       socket.emit("leaveRoom", id);
+      socket.off("newMessage", newMessage);
     };
   }, [id]);
 
   useEffect(() => {
-    getMessages(userId);
+    if (id && userId) getMessages(userId);
 
     async function getMessages(userId) {
       const {
         chatRooms: { messages },
-      } = await getChatMessages(userId);
+      } = await getChatMessages({ id: userId, isMulti: false, chatId: id });
 
       const users = Object.keys(messages);
       const userMsgA = messages[users[0]];
@@ -56,13 +63,15 @@ const ChatMessages = ({ session, userId }) => {
 
       setMessages(constructMessages(userMsgA, userMsgB));
     }
-  }, [userId]);
+  }, [id, userId]);
 
-  const handleNewMessage = (roomId, msg, userId) => {
-    //await updateMessages(roomId, msg, userId);
-    setMessages([...messages, msg]);
+  const handleNewMessage = async (roomId, msg, sendUserId) => {
+    if (userId !== sendUserId) await updateMessages(roomId, msg, sendUserId);
+
+    setMessages((prev) => [...prev, msg]);
   };
 
+  const inputField = document.getElementById("input");
   const handleSubmit = (e) => {
     if (e.keyCode === 13) {
       socket.emit(
@@ -74,12 +83,9 @@ const ChatMessages = ({ session, userId }) => {
         },
         userId.toString()
       );
+      inputField.value = "";
     }
   };
-
-  socket.on("newMessage", (roomId, msg, userId) => {
-    if (roomId === id) handleNewMessage(roomId, msg, userId);
-  });
 
   return (
     <div>
@@ -87,7 +93,12 @@ const ChatMessages = ({ session, userId }) => {
       {messages.map((msg, i) => (
         <div key={i}>{msg.message}</div>
       ))}
-      <input type="text" placeholder="Chat" onKeyDown={handleSubmit} />
+      <input
+        id="input"
+        type="text"
+        placeholder="Chat"
+        onKeyDown={handleSubmit}
+      />
     </div>
   );
 };

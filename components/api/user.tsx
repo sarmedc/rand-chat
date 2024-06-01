@@ -1,7 +1,7 @@
 import { api } from "./helper";
 
 export const getUser = async (email: String) => {
-  return api(
+  return await api(
     `http://localhost:3000/api/users/${email}`,
     {},
     "Failed to fetch user"
@@ -13,7 +13,7 @@ export const addUser = async (user: {
   email: String;
   role: String;
 }) => {
-  return api(
+  return await api(
     `http://localhost:3000/api/users`,
     {
       method: "POST",
