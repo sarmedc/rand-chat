@@ -1,4 +1,4 @@
-## RandChat
+## RandoChat
 
 This app allows you to randomly connect with another user to chat with.
 
